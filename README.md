@@ -12,8 +12,8 @@ This is a http trigger function and the entry point for the application
 ```
         [FunctionName("fcprocessorder_HttpStart")]
         public static async Task<HttpResponseMessage> HttpStart(
-          [HttpTrigger(AuthorizationLevel.Anonymous, "get","post")]HttpRequestMessage req, 
-          [DurableClient] IDurableOrchestrationClient starter, ILogger log)
+                [HttpTrigger(AuthorizationLevel.Anonymous, "get","post")]HttpRequestMessage req, 
+                [DurableClient] IDurableOrchestrationClient starter, ILogger log)
         {
             string instanceId = await starter.StartNewAsync("fcprocessorder", null);
 
@@ -22,3 +22,23 @@ This is a http trigger function and the entry point for the application
             return starter.CreateCheckStatusResponse(req, instanceId);
         }
 ```
+
+### Orchestrator function to call the activity functions in a specific order
+```
+        [FunctionName("fcprocessorder")]
+        public static async Task<List<string>> RunOrchestrator(
+                [OrchestrationTrigger] IDurableOrchestrationContext context)
+        {
+            var outputs = new List<string>();
+
+            bool productAvailable = await context.CallActivityAsync<bool>("CheckProductAvailability", 
+                                                                        "Mi Band 4, Optical Mouse - red");
+            if(productAvailable)
+                outputs.Add("Products are available");
+            double totalAmount = await context.CallActivityAsync<double>("CreateInvoice", productAvailable);
+            outputs.Add(string.Format("Total Invoice Amount {0}", totalAmount));
+            await context.CallActivityAsync("ShipProducts", totalAmount);
+            outputs.Add("Products are shipped.");
+            return outputs;
+        }
+  ```
