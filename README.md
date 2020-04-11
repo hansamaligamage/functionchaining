@@ -42,3 +42,33 @@ This is a http trigger function and the entry point for the application
             return outputs;
         }
   ```
+  
+  ### Activity functions
+  ```
+        [FunctionName("CheckProductAvailability")]
+        public static bool ProductAvailability([ActivityTrigger] string productList, ILogger log)
+        {
+            log.LogInformation($"Product List - {productList}.");
+            bool productsAvailable = true;
+            return productsAvailable;
+        }
+
+        [FunctionName("CreateInvoice")]
+        public static double CreateInvoice([ActivityTrigger] bool productAvailable, ILogger log)
+        {
+            if (productAvailable)
+            {
+                double invoiceAmount = 20000;
+                log.LogInformation("Products are available");
+                return invoiceAmount;
+            }
+            else
+                return 0;
+        }
+
+        [FunctionName("ShipProducts")]
+        public static void ShipProducts([ActivityTrigger] double totalAmount, ILogger log)
+        {
+            log.LogInformation($"Invoice Amount {totalAmount}.");
+        }
+  ```
